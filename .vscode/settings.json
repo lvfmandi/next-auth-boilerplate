@@ -1,0 +1,9 @@
+{
+  "liveFrame.title": "Next App",
+  "liveFrame.url": "http://localhost:3000",
+  "editor.fontFamily": "'Monospace Neon', 'JetBrains Mono', 'Cascadia Code',  'monospace'",
+  "editor.tabSize": 8,
+  "editor.fontLigatures": "'calt', 'liga', 'ss01', 'ss02', 'ss03', 'ss04', 'ss05', 'ss06', 'ss07', 'ss08', 'ss09'",
+  "editor.fontSize": 14,
+  "scm.inputFontSize": 14
+}

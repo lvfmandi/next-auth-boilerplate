@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Provider {
+  google
+  facebook
+}
+
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  type              String
+  provider          Provider
+  providerAccountId String   @unique
+  refresh_token     String?
+  access_token      String
+  expires_at        DateTime
+  token_type        String
+  scope             String
+  id_token          String
+  session_state     String?
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                      String                 @id @default(cuid())
+  fullName                String
+  email                   String?                @unique
+  telephone               String?                @unique
+  password                String?
+  emailVerified           DateTime?
+  phoneVerified           DateTime?
+  image                   String?
+  role                    Role                   @default(USER)
+  isTwoFactorEnabled      Boolean                @default(false)
+  createdAt               DateTime               @default(now())
+  twoFactorConfirmationId String?
+  twoFactorConfirmation   TwoFactorConfirmation?
+  refreshTokenVersion     String                 @unique @default(cuid())
+  accounts                Account[]
+}
+
+model VerificationCode {
+  id      String   @id @default(cuid())
+  email   String
+  code    String   @unique
+  expires DateTime
+
+  @@unique([email, code])
+}
+
+model PasswordResetCode {
+  id      String   @id @default(cuid())
+  email   String
+  code    String   @unique
+  expires DateTime
+
+  @@unique([email, code])
+}
+
+model TwoFactorCode {
+  id      String   @id @default(cuid())
+  email   String
+  code    String   @unique
+  expires DateTime
+
+  @@unique([email, code])
+}
+
+model TwoFactorConfirmation {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
