@@ -4,7 +4,7 @@ import { TwoFactorEmail } from '@/components/email-templates/two-factor-email';
 import { VerificationEmail } from '@/components/email-templates/verification-email';
 import { PasswordResetEmail } from '@/components/email-templates/password-reset-email';
 
-const resend = new Resend(process.env.RESEND_APIKEY);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendEmailVerificationCode = async (email: string, code: string) => {
   const { data, error } = await resend.emails.send({
