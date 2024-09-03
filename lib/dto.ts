@@ -1,10 +1,30 @@
 import 'server-only';
 
-import { User } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { TypeUserDTO } from './definitions';
 
+type UserWithAccount = Prisma.UserGetPayload<{ include: { accounts: true } }>;
+
 // This data transfer object is aimed at returning only the necessary data from the PRISMA User model
-export const UserDTO = (User: User): TypeUserDTO => {
-  const { id,fullName, email, telephone, image, role, isTwoFactorEnabled } = User;
-  return { id, fullName, email, telephone, image, role, isTwoFactorEnabled };
+export const UserDTO = (User: UserWithAccount): TypeUserDTO => {
+  const {
+    id,
+    fullName,
+    email,
+    telephone,
+    image,
+    role,
+    isTwoFactorEnabled,
+    accounts,
+  } = User;
+  return {
+    id,
+    fullName,
+    email,
+    telephone,
+    image,
+    role,
+    isTwoFactorEnabled,
+    accounts: accounts.map((account) => account.id),
+  };
 };

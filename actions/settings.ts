@@ -47,8 +47,15 @@ export const settings = async (values: z.infer<typeof SettingsSchema>) => {
     telephone: user.telephone || undefined,
   });
 
-  // Return an error if the user's don't match
-  if (user.id !== existingUser?.id) return { error: 'Unauthorized!' };
+  // Removing the email and password of the user is they are an oAuth user
+  if (user.accounts.length) {
+    values.password = undefined;
+    values.email = undefined;
+  }
+
+  if (user.id !== existingUser?.id)
+    // Return an error if the user's don't match
+    return { error: 'Unauthorized!' };
 
   // Return an error if we do not have a valid user
   if (!existingUser) return { error: 'User does not exist' };
@@ -129,7 +136,7 @@ export const settings = async (values: z.infer<typeof SettingsSchema>) => {
   await db.user.update({
     where: { id: existingUser.id },
     data: {
-      email: email || undefined,
+      email: values.email || undefined,
       telephone: telephone || undefined,
       fullName: `${firstName} ${lastName}`,
       password: values.password || undefined,

@@ -183,72 +183,74 @@ export const SettingsForm = () => {
                   </FormItem>
                 )}
               />
-              <div className="space-y-2">
-                <div className="flex items-start">
-                  <Select
-                    defaultValue={emailOrTel}
-                    onValueChange={changeEmailOrTelephone}
-                  >
-                    <SelectTrigger className="w-20 rounded-r-none border-r-0 focus:ring-0">
-                      <SelectValue placeholder="Email/Tel" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="email">Email</SelectItem>
-                      <SelectItem value="telephone">Tel</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {emailOrTel === 'email' && (
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem className="w-full">
-                          <FormControl>
-                            <Input
-                              type="email"
-                              placeholder="Email"
-                              {...field}
-                              disabled={isPending}
-                              className="rounded-l-none"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  )}
-                  {emailOrTel === 'telephone' && (
-                    <FormField
-                      control={form.control}
-                      name="telephone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <PhoneInput
-                              country={'ke'}
-                              countryCodeEditable={false}
-                              placeholder="+254 712 345 678"
-                              disabled={isPending}
-                              containerClass="shadow-sm"
-                              inputClass="!w-full !h-9 !border-border"
-                              buttonClass="!rounded-l-none h-9 !border-border"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
+              {!user.accounts.length && (
+                <div className="space-y-2">
+                  <div className="flex items-start">
+                    <Select
+                      defaultValue={emailOrTel}
+                      onValueChange={changeEmailOrTelephone}
+                    >
+                      <SelectTrigger className="w-20 rounded-r-none border-r-0 focus:ring-0">
+                        <SelectValue placeholder="Email/Tel" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="telephone">Tel</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {emailOrTel === 'email' && (
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem className="w-full">
+                            <FormControl>
+                              <Input
+                                type="email"
+                                placeholder="Email"
+                                {...field}
+                                disabled={isPending}
+                                className="rounded-l-none"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                    {emailOrTel === 'telephone' && (
+                      <FormField
+                        control={form.control}
+                        name="telephone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <PhoneInput
+                                country={'ke'}
+                                countryCodeEditable={false}
+                                placeholder="+254 712 345 678"
+                                disabled={isPending}
+                                containerClass="shadow-sm"
+                                inputClass="!w-full !h-9 !border-border"
+                                buttonClass="!rounded-l-none h-9 !border-border"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => <FormMessage />}
+                  />
+                  <FormDescription className="text-xs">
+                    Use your <b>email</b> or <b>telephone</b>
+                  </FormDescription>
                 </div>
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => <FormMessage />}
-                />
-                <FormDescription className="text-xs">
-                  Use your <b>email</b> or <b>telephone</b>
-                </FormDescription>
-              </div>
+              )}
               <FormField
                 control={form.control}
                 name="role"
@@ -293,44 +295,48 @@ export const SettingsForm = () => {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Old Password"
-                        {...field}
-                        disabled={isPending}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="newPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="New Password"
-                        {...field}
-                        disabled={isPending}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                    <FormDescription className="text-xs">
-                      Repeat the password you entered above to make sure you
-                      entered it correctly
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
+              {!user.accounts.length && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder="Old Password"
+                            {...field}
+                            disabled={isPending}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="newPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder="New Password"
+                            {...field}
+                            disabled={isPending}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                        <FormDescription className="text-xs">
+                          Repeat the password you entered above to make sure you
+                          entered it correctly
+                        </FormDescription>
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
             </>
           )}
           {errorSuccess && (

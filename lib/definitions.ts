@@ -22,6 +22,7 @@ export type TypeUserDTO = {
   image: string | null;
   role: 'USER' | 'ADMIN';
   isTwoFactorEnabled: boolean;
+  accounts: string[];
 };
 
 export type GoogleUser = {

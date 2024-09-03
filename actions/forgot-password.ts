@@ -106,6 +106,10 @@ export const forgotPassword = async (
     //    Return an error if we don't have a user with that email
     const existingUser = await getUserByEmailOrTelephone({ email, telephone });
 
+    // Return an error if the user is an oAuth user
+    if (existingUser?.accounts.length)
+      return { error: 'This user is not authenticated using a password!' };
+
     if (!existingUser)
       return { error: 'We did not find an account with those credentials' };
 

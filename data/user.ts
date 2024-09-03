@@ -2,7 +2,10 @@ import { db } from '@/lib/db';
 
 export const getUserById = async (id: string) => {
   try {
-    return await db.user.findUnique({ where: { id } });
+    return await db.user.findUnique({
+      where: { id },
+      include: { accounts: true },
+    });
   } catch (error) {
     return null;
   }
@@ -10,7 +13,10 @@ export const getUserById = async (id: string) => {
 
 export const getUserByEmail = async (email: string) => {
   try {
-    return await db.user.findUnique({ where: { email } });
+    return await db.user.findUnique({
+      where: { email },
+      include: { accounts: true },
+    });
   } catch (error) {
     return null;
   }
@@ -18,7 +24,10 @@ export const getUserByEmail = async (email: string) => {
 
 export const getUserByTelephone = async (telephone: string) => {
   try {
-    return await db.user.findUnique({ where: { telephone } });
+    return await db.user.findUnique({
+      where: { telephone },
+      include: { accounts: true },
+    });
   } catch (error) {
     return null;
   }
@@ -39,6 +48,7 @@ export const getUserByEmailOrTelephone = async ({
           { telephone: telephone || undefined },
         ],
       },
+      include: { accounts: true },
     });
 
     return user;
