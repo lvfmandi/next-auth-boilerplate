@@ -1,5 +1,8 @@
 <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 16px; text-align: center; margin: 0 auto; width: fit-content;">
-    <img src="./public/next.svg" width="130" alt="Logo for Next JS">
+<picture>
+        <source media="(prefers-color-scheme: dark)" srcset="./public/next-light.svg">
+        <img src="./public/next.svg" width="130" alt="Logo for Next JS">
+    </picture>
     <img src="https://neon.tech/_next/static/svgs/6da928883916f39a4848774319dcaf81.svg" width="100" alt="Logo for Neon">
     <img src="https://raw.githubusercontent.com/prisma/presskit/main/Assets/Prisma-IndigoLogo.svg" width="100" alt="Logo for Prisma">
     <img src="./public/ts-logo.svg" width="60" alt="Logo for Typescript">
@@ -11,7 +14,7 @@
     </picture>
     <img src="https://www.twilio.com/content/dam/twilio-com/global/en/blog/legacy/2010/twilio-logo-in-the-snow-html/twilio-mark-red.png" width="60" alt="logo for twilio"/>
 </div>
-<hr />
+<span style="border-bottom: 1px solid"></span>
 <h1 style="font-weight: 300" align="center">
   NextJS Authentication with: Neon, Postgress, Typescript, ArcicJS, Resend, Twilio and Shadcn Components
 </h1>
@@ -21,7 +24,7 @@
 ## Getting Started
 
 ### Environment Variables
-To get started, you need to create a .env file in the root of the project. Add all the environment variables: <br>
+To get started, you need to create a `.env` file in the root of the project. Add all the environment variables: <br>
 Below are the environment variables and where you can get them
 
 ```env
