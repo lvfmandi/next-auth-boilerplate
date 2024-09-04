@@ -16,7 +16,7 @@
 </div>
 <span style="border-bottom: 1px solid"></span>
 <h1 style="font-weight: 300" align="center">
-  NextJS Authentication with: Neon, Postgress, Typescript, ArcicJS, Resend, Twilio and Shadcn Components
+  NextJS Authentication boilerplate with: Neon, Postgress, Typescript, ArcicJS, Resend, Twilio and Shadcn Components
 </h1>
 
 ![Next JS Authentication Image](./public//app-image.png)
@@ -112,4 +112,167 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## The flow
+## The Flow
+### Sign Up flow - `/actions/signup.ts`
+The sign up flow, works as follows:
+
+1. Once the user submits the data, we validate it: We use [zod](https://www.zod.dev) for validation.
+
+```typescript
+const isValid = SignUpSchema.safeParse(data);
+
+// return error if not valid
+if (!isValid.success) return { error: 'The data provided is invalid!' };
+```
+
+2. If the data doesn't have a code we add them to our DB and then we send them a code and return them to the sign up page for them to add the code to the form.
+
+* Check if the user we are trying to add is in our DB
+
+```typescript
+// check if the user already exists
+  const exisitingUser = await getUserByEmailOrTelephone({ email, telephone });
+  if (exisitingUser) {
+    if (email) return { error: 'Email already in use!' };
+    if (telephone) return { error: 'Phone number already in use!' };
+  }
+```
+
+* We add them to the DB
+
+```typescript
+try {
+    // insert data to db
+    const fullName = `${firstName} ${lastName}`;
+    const hash = bcrypt.hashSync(password, 12);
+
+    await db.user.create({
+      data: { fullName, email, telephone, password: hash },
+    });
+  } catch (error) {
+    return {
+      error: 'An error occured on our side, please try signing up again',
+    };
+  }
+```
+* We send them the code
+```typescript
+    if (telephone) {
+      //  send them a code if they used their phone
+      //  send them to the sign up page with the data they had given us
+    }
+
+    if (email) {
+      // send them a code if they used their email
+      //  send them to the sign up page with the data they had given us
+    }
+```
+
+3. We check if the data includes a code for verifying their contact (**phone** or **email**) and if so we verify their contact before proceeding.
+   
+```typescript
+  if (code) {
+    if (telephone) {
+      // verify the phone number code if they used their phone for verification
+    }
+
+    if (email) {
+      // verify the email code if they used their email for verification
+    }
+  }
+```
+
+### Login flow - `/actions/login.ts`
+The login flow works as follows:
+
+1. Once the user submits the data, we validate it using [zod](https://www.zod.dev).
+
+```typescript
+  const isValid = LogInSchema.safeParse(data);
+
+  if (!isValid.success) return { error: 'The data provided in invalid!' };
+```
+
+2. We look up the user, and if we do not have a user, we return an error
+```typescript
+  // look up the user
+  const existingUser = await getUserByEmailOrTelephone({ email, telephone });
+
+  // return error if we have no user in the DB
+  if (!existingUser)
+    return { error: 'Invalid username or password, try again!' };
+```
+
+1. We check if the user has been verified, if not we verify them. Here we repeat the process we went through in the sign up server action just in case they skipped the verification part.
+   
+2. We go through a similar process of verification but now, only if the user has 2FA enabled in their settings.
+```typescript
+    // check if the user has 2FA enabled
+  if (existingUser.isTwoFactorEnabled) {
+    // check if they have given us the code, so that we can verify it
+    // if they do not have a code, send it to them so that we can verify them 
+  }
+```
+1. Compare if passwords match
+```typescript
+// compare if passwords match
+  const passwordsMatch = bcrypt.compareSync(
+    password,
+    existingUser.password || '',
+  );
+
+  // return error if passwords don't match
+  if (!passwordsMatch) return { error: 'Invalid email or password' };
+```
+
+6. Create a session once the user is authenticated
+```typescript
+  // add the tokens to the HTTP-only cookie
+  await createSession({
+    userId: existingUser.id,
+    userRole: existingUser.role,
+    _v: existingUser.refreshTokenVersion,
+  });
+```
+
+7. We return the user we just created to the frontend so that they can be persisted in the state
+
+
+### Forgot password flow - `/actions/forgot-password.ts`
+1. Check if we have a code, and verify it
+```typescript
+if(code) {
+  // verify that code using the contact information provided by the user in step 2 or 3
+}
+```
+2. Check if we are using a phone number
+```typescript
+if(telephone) {
+  // verify that code using the phone number provided by the user
+}
+```  
+1. Check if we are using an email
+```typescript
+if(email) {
+  // verify that code using the email provided by the user
+}
+```
+3. If we don't have a code, send them a verification code
+```typescript
+else {
+  // verify that code using the contact provided by the user
+  // (email) or (telephone)
+}
+```
+
+### Settings page flow
+1. Get the current user by checking the session
+2. Validate the data
+3. Remove the email and password of a user if they are an oAuth user
+4. Pass some data validation checks
+5. If we have a code, we can validate a new user
+6. If we don't have a code, we can send the user a code so that they can resend it with a request
+7. Changing roles
+8. Updating a user
+
+### 

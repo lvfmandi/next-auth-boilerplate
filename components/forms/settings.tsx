@@ -283,7 +283,7 @@ export const SettingsForm = () => {
                       <FormLabel>Two Factor Enabled</FormLabel>
                       <FormDescription>
                         You will be required to confirm it's you everytime you
-                        try sign in
+                        log in
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -328,10 +328,6 @@ export const SettingsForm = () => {
                           />
                         </FormControl>
                         <FormMessage />
-                        <FormDescription className="text-xs">
-                          Repeat the password you entered above to make sure you
-                          entered it correctly
-                        </FormDescription>
                       </FormItem>
                     )}
                   />

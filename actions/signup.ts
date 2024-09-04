@@ -27,7 +27,75 @@ export const signup = async (data: z.infer<typeof SignUpSchema>) => {
   const { firstName, lastName, email, telephone, password, code } = data;
 
   // this is the second time they are sending data through this function becuause they have a code
-  if (code) {
+  if (!code) {
+    // check if the user already exists
+    const exisitingUser = await getUserByEmailOrTelephone({ email, telephone });
+    if (exisitingUser) {
+      if (email) return { error: 'Email already in use!' };
+      if (telephone) return { error: 'Phone number already in use!' };
+    }
+
+    try {
+      // insert data to db
+      const fullName = `${firstName} ${lastName}`;
+      const hash = bcrypt.hashSync(password, 12);
+
+      await db.user.create({
+        data: { fullName, email, telephone, password: hash },
+      });
+    } catch (error) {
+      return {
+        error:
+          'An error occured when creating your account, please try signing up again',
+      };
+    }
+
+    //  send them a code if they used their phone
+    if (telephone) {
+      try {
+        // send the code for registration
+        await sendVerificationCode(`+${telephone}`);
+
+        // return that a code needs to be entered with a success message
+        return {
+          code: {
+            status: true,
+            message: 'Enter the verification code sent to your phone',
+          },
+        };
+      } catch (_error) {
+        // We had an error sending them a code and we should give them that chance again
+        const error = _error as Error;
+        return { code: { status: false, message: error.message } };
+      }
+    }
+
+    // send them a code if they used their email
+    if (email) {
+      try {
+        // generate the verification code
+        const verificationCode = await generateEmailVerificationCode(email);
+
+        // send the email for registration
+        await sendEmailVerificationCode(
+          verificationCode.email,
+          verificationCode.code,
+        );
+
+        // return success when successful
+        return {
+          code: {
+            status: true,
+            message: 'Enter the verification code sent to your email',
+          },
+        };
+      } catch (_error) {
+        // We had an error sending them a code and we should give them that chance again
+        const error = _error as Error;
+        return { code: { status: false, message: error.message } };
+      }
+    }
+  } else {
     // verify the telephone code if they used their phone for verification
     if (telephone) {
       try {
@@ -49,73 +117,5 @@ export const signup = async (data: z.infer<typeof SignUpSchema>) => {
     }
   }
 
-  // check if the user already exists
-  const exisitingUser = await getUserByEmailOrTelephone({ email, telephone });
-  if (exisitingUser) {
-    if (email) return { error: 'Email already in use!' };
-    if (telephone) return { error: 'Phone number already in use!' };
-  }
-
-  try {
-    // insert data to db
-    const fullName = `${firstName} ${lastName}`;
-    const hash = bcrypt.hashSync(password, 12);
-
-    await db.user.create({
-      data: { fullName, email, telephone, password: hash },
-    });
-  } catch (error) {
-    return {
-      error: 'An error occured on our side, please try signing up again',
-    };
-  }
-
-  //  send them a code if they used their phone
-  if (telephone) {
-    try {
-      // send the code for registration
-      await sendVerificationCode(`+${telephone}`);
-
-      // return that a code needs to be entered with a success message
-      return {
-        code: {
-          status: true,
-          message: 'Enter the verification code sent to your phone',
-        },
-      };
-    } catch (_error) {
-      // We had an error sending them a code and we should give them that chance again
-      const error = _error as Error;
-      return { code: { status: false, message: error.message } };
-    }
-  }
-
-  // send them a code if they used their email
-  if (email) {
-    try {
-      // generate the verification code
-      const verificationCode = await generateEmailVerificationCode(email);
-
-      // send the email for registration
-      await sendEmailVerificationCode(
-        verificationCode.email,
-        verificationCode.code,
-      );
-
-      // return success when successful
-      return {
-        code: {
-          status: true,
-          message: 'Enter the verification code sent to your email',
-        },
-      };
-    } catch (_error) {
-      // We had an error sending them a code and we should give them that chance again
-      const error = _error as Error;
-      return { code: { status: false, message: error.message } };
-    }
-  }
-
-  // This should never run
-  return { error: 'Please try sign up again!' };
+  return { error: 'Please add a phone number or email' };
 };
