@@ -267,12 +267,89 @@ else {
 
 ### Settings page flow
 1. Get the current user by checking the session
+```typescript
+//getting to know if they are verified
+  const user = await getCurrentUser();
+  if (!user) return { error: 'Unauthorized!' };
+```
 2. Validate the data
+```typescript
+  // validate the data
+  const isValid = SettingsSchema.safeParse(values);
+  if (!isValid.success) return { error: 'The data is invalid' };
+```
 3. Remove the email and password of a user if they are an oAuth user
+```typescript
+// Removing the email and password of the user is they are an oAuth user
+if (user.accounts.length) {
+  values.password = undefined;
+  values.email = undefined;
+}
+```
 4. Pass some data validation checks
+```typescript
+if (user.id !== existingUser?.id)
+  // Return an error if the user's don't match
+  return { error: 'Unauthorized!' };
+
+// Return an error if we do not have a valid user
+if (!existingUser) return { error: 'User does not exist' };
+```
 5. If we have a code, we can validate a new user
+```typescript
+if (code) {
+    if (telephone) {
+      // verify the user through their telephone
+    }
+
+    if (email) {
+    //  verify the user through their email
+    }
+}
+```
 6. If we don't have a code, we can send the user a code so that they can resend it with a request
-7. Changing roles
+```typescript
+else {
+  if (telephone) {
+      // send a telephone code to the user
+    }
+
+    if (email) {
+    //  send a telephone email to the user
+    }
+}
+```
+
+7. Changing roles. Only allow the user to change their roles if they are admin. This shows how we can restrict users from doing something if they aren't an ADMIn
+```typescript
+  // trying to change USER to ADMIN
+  if (role !== user.role && user.role !== 'ADMIN')
+    return { error: 'Only admins can change their roles' };
+
+  if (password && newPassword && existingUser.password) {
+    // Return an error if the passwords do not match
+    const passwordsMatch = bcrypt.compareSync(password, existingUser.password);
+
+    if (!passwordsMatch) return { error: 'Incorrect Password!' };
+
+    const hash = bcrypt.hashSync(newPassword, 12);
+    values.password = hash;
+  }
+```
+
 8. Updating a user
+```typescript
+await db.user.update({
+    where: { id: existingUser.id },
+    data: {
+      email: values.email || undefined,
+      telephone: telephone || undefined,
+      fullName: `${firstName} ${lastName}`,
+      password: values.password || undefined,
+      isTwoFactorEnabled,
+      role,
+    },
+  });
+```
 
 ### 
