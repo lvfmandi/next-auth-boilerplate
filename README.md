@@ -113,7 +113,7 @@ bun dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## The Flow
-### Sign Up flow - `/actions/signup.ts`
+### Sign Up flow (email and password) - `/actions/signup.ts`
 The sign up flow, works as follows:
 
 1. Once the user submits the data, we validate it: We use [zod](https://www.zod.dev) for validation.
@@ -182,7 +182,7 @@ try {
   }
 ```
 
-### Login flow - `/actions/login.ts`
+### Login flow (email and password) - `/actions/login.ts`
 The login flow works as follows:
 
 1. Once the user submits the data, we validate it using [zod](https://www.zod.dev).
@@ -237,6 +237,115 @@ The login flow works as follows:
 
 7. We return the user we just created to the frontend so that they can be persisted in the state
 
+### Login flow (google oAuth) - `/app/api/auth/google/route.ts`
+1. Arctic abstracts some of the processes for us, but in a very simple way so that we can still tell what's going on. 
+* First, we start by creating a url that we will redirect the user to in the oAuth provider. In google that is as shown below. It's also good to note that google oAuth has PKCE *(pronounced pixy)*, which is an extra layer of security. We won't be dwelling on that a lot. 
+  ```typescript
+   const url = await google.createAuthorizationURL(state, codeVerifier, {
+    scopes: ['email', 'profile'], //open id connect is already added in this scope by Arctic
+  });
+  ```
+* We then redirect the user to that URL and the user get's to choose whether they want to give our app that access to their data. If they choose YES, we continue:
+```typescript
+  //   store state verifier as cookie
+  cookies().set('state', state, {
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    httpOnly: true,
+    maxAge: 10 * 60, // 10 minutes
+  });
+
+  //   store code verifier as cookie
+  cookies().set('code_verifier', codeVerifier, {
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    httpOnly: true,
+    maxAge: 10 * 60, // 10 minutes
+  });
+
+return NextResponse.redirect(url);
+```
+* At this point, the user is in the google website, accepting to give us these rights, after which they are sent back to our site with a positive response or a negative response based on their willingness to give our site the data. They are redirected to the callback url we gave google in this case `/api/auth/callback/google/route.ts` in the `/app` directory.
+
+* We create a GET route in the callback URL that google will call
+```typescript
+export const GET = async (req: NextRequest) => {
+  
+};
+```
+* We then go ahead and validate the code and state we sent to google to ensure they are the ones we sent:
+```typescript
+const searchParams = req.nextUrl.searchParams;
+  const code = searchParams.get('code');
+  const state = searchParams.get('state');
+
+  const storedState = cookies().get('state')?.value ?? null;
+  const codeVerifier = cookies().get('code_verifier')?.value ?? null;
+  const Location = '/dashboard';
+
+  if (
+    !code ||
+    !state ||
+    !storedState ||
+    !codeVerifier ||
+    state !== storedState
+  ) {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: `/login?error=${'Invalid credentials'}`,
+      },
+    });
+  }
+
+try {
+  const tokens = await google.validateAuthorizationCode(code, codeVerifier);
+
+  // decode the id token and get the data
+  const googleUser = decode(tokens.idToken);
+
+```
+
+* We then go ahead and authenticate the user by creating a session. If the user doesn't exist on our database we add them.
+```typescript
+    // check if we have a similar account
+    const existingAccount = await getAccountByProviderUserId(
+      googleUser.sub as string,
+    );
+
+    // The account exists in our database
+    if (existingAccount) {
+      await createSession({
+        userId: existingAccount.userId,
+        userRole: existingAccount.user.role,
+        _v: existingAccount.user.refreshTokenVersion,
+      });
+
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location,
+        },
+      });
+    }
+
+    // the account doesn't exist in our database and so we will create a new user and a new account
+    const { sub, email, name, picture, exp } = googleUser as GoogleUser;
+    // create the user
+    const user = //CREATE A USER
+
+    // create the account in our db
+
+    // create session
+    await createSession({
+      userId: user.id,
+      userRole: user.role,
+      _v: user.refreshTokenVersion,
+    });
+
+    return new Response(null, { status: 302, headers: {Location } });
+  }
+```
 
 ### Forgot password flow - `/actions/forgot-password.ts`
 1. Check if we have a code, and verify it
@@ -352,4 +461,7 @@ await db.user.update({
   });
 ```
 
-### 
+## Conclusion
+There's a lot happening in the application. I couldn't cover it all in the documentation, but by following the functions in the code, you can get to see how everything works together and how sessions are created. I used `jose` for managing the JWTs. Shadcn for the components, Resend for the emails, Twilio for SMS, Postgres for the DB although we didn't interact with it directly because we have `PRISMA` client and bcryptjs all that I haven't explicitly covered in these docs.
+
+By exploring the code, you will get to see how everything works together. Enjoy!
